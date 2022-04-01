@@ -1,6 +1,5 @@
-# Apktool 
+# Apktool [![apktools](https://s3.amazonaws.com/github/ribbons/forkme_right_green_007200.png)](https://github.com/iBotPeaches/Apktool)
 **Este é o repositório do Apktool. Se você estiver procurando pelo site Apktool. Clique [aqui](https://github.com/iBotPeaches/Apktool/tree/gh-pages).**
-[![apktools](https://s3.amazonaws.com/github/ribbons/forkme_right_green_007200.png)](https://github.com/iBotPeaches/Apktool)
 
 ### Uma ferramenta para engenharia reversa de arquivos apk Android
 ```

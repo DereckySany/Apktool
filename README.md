@@ -2,7 +2,7 @@
 **Este é o repositório do Apktool. Se você estiver procurando pelo site Apktool. Clique [aqui](https://github.com/iBotPeaches/Apktool/tree/gh-pages).**
 
 ### Uma ferramenta para engenharia reversa de arquivos apk Android
-<!--
+
 ```
 $ apktool d test.apk
 I: Using Apktool 2.6.1 on test.apk
@@ -24,9 +24,6 @@ I: Building resources...
 I: Building apk file...
 I: Copying unknown files/dir...
 ```
--->
-![Screenshot_20220401_154152](https://user-images.githubusercontent.com/28354751/161323229-30a35125-4641-4369-819b-f98d1481e6ae.png)
-
 
 [![Participe do chat em https://gitter.im/iBotPeaches/Apktool](https://badges.gitter.im/iBotPeaches/Apktool.svg)](https://gitter.im/iBotPeaches/Apktool?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![CI](https://github.com/iBotPeaches/Apktool/actions/workflows/build.yml/badge.svg)](https://github.com/iBotPeaches/Apktool/actions/workflows/test.yml)

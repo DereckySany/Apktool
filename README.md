@@ -1,5 +1,6 @@
-# Apktool
+# Apktool 
 **Este é o repositório do Apktool. Se você estiver procurando pelo site Apktool. Clique [aqui](https://github.com/iBotPeaches/Apktool/tree/gh-pages).**
+[![apktools](https://s3.amazonaws.com/github/ribbons/forkme_right_green_007200.png)](https://github.com/iBotPeaches/Apktool)
 
 ### Uma ferramenta para engenharia reversa de arquivos apk Android
 ```
@@ -33,7 +34,7 @@ NÃO se destina a pirataria e outros usos não legais. Ele pode ser usado para l
 
 #### Apoiar
 - [Página do projeto](https://ibotpeaches.github.io/Apktool/)
-- [apktool no libera.chat](https://web.libera.chat/)
+- [Apktool no libera.chat](https://web.libera.chat/)
 
 #### Patrocinado por
 
@@ -58,4 +59,3 @@ Se você descobrir uma vulnerabilidade de segurança no Apktool, envie um e-mail
 - [Post XDA](https://forum.xda-developers.com/t/util-dec-2-2020-apktool-tool-for-reverse-engineering-apk-files.1755243/)
 - [Fonte (Github)](https://github.com/iBotPeaches/Apktool)
 - [Fonte (Bitbucket)](https://bitbucket.org/iBotPeaches/apktool/)
-

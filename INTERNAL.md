@@ -110,6 +110,7 @@ We upload the binaries into 3 places.
 1. [Bitbucket Downloads](https://bitbucket.org/iBotPeaches/apktool/downloads)
 2. [Github Releases](https://github.com/iBotPeaches/Apktool/releases) - Since `2.2.1`.
 3. [Backup Mirror](https://connortumbleson.com/apktool/)
+4. [Sonatype (Maven)](https://oss.sonatype.org)
 
 #### Bitbucket
 
@@ -148,8 +149,18 @@ Check the `md5.md5sum` file for the hashes. The file will look something like th
 Additionally check the `sha256.shasum` file for the hashes. This file will look almost identical to the above
 except for containing sha256 hashes.
 
-The hashes match so we have uploaded the binaries to all 3 locations. Time to get writing the release
-post.
+The hashes match so we are good with the backup server.
+
+
+#### Sonatype
+
+You'll want to log in and view the Staging repostories and confirm you see the recently made build. You'll want to:
+
+ * Close it (Wait for audit report email)
+ * Release it (Drop the staging repository)
+ * Wait 20min - 2 hours for it to appear [here](https://mvnrepository.com/artifact/org.apktool/apktool-lib)
+
+With those done, time to get writing the release post.
 
 We currently blog the releases on the [Connor Tumbleson personal blog](https://connortumbleson.com/).
 This may change and the formatting of these release posts change over time.
@@ -241,6 +252,11 @@ original as they were.
 
 As cheesy as it is, just follow this [downloading](https://source.android.com/source/downloading.html) link in order
 to get the source downloaded. This is no small download, expect to use 150-250GB.
+
+Some optimization techniques for a smaller clone:
+
+ * `~/bin/repo init -u https://android.googlesource.com/platform/manifest -b master --partial-clone` - Partial clone
+ * `repo sync -c` - Only current branch
 
 After that, you need to build AOSP via this [documentation](https://source.android.com/source/building.html) guide. Now
 we aren't building the entire AOSP package, the initial build is to just see if you are capable of building it.

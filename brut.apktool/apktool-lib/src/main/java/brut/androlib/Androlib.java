@@ -20,6 +20,7 @@ import brut.androlib.meta.MetaInfo;
 import brut.androlib.meta.UsesFramework;
 import brut.androlib.options.BuildOptions;
 import brut.androlib.res.AndrolibResources;
+import brut.androlib.res.data.ResConfigFlags;
 import brut.androlib.res.data.ResPackage;
 import brut.androlib.res.data.ResTable;
 import brut.androlib.res.data.ResUnknownFiles;
@@ -35,7 +36,10 @@ import brut.util.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.jf.dexlib2.iface.DexFile;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 import java.io.*;
 import java.util.*;
 import java.util.logging.Logger;
@@ -173,16 +177,19 @@ public class Androlib {
 
             for (String file : files) {
                 if (isAPKFileNames(file) && unk.getCompressionLevel(file) == 0) {
-                    String ext = "";
+                    String extOrFile = "";
                     if (unk.getSize(file) != 0) {
-                        ext = FilenameUtils.getExtension(file);
+                        extOrFile = FilenameUtils.getExtension(file);
                     }
 
-                    if (ext.isEmpty() || !NO_COMPRESS_PATTERN.matcher(ext).find()) {
-                        ext = file;
+                    if (extOrFile.isEmpty() || !NO_COMPRESS_PATTERN.matcher(extOrFile).find()) {
+                        extOrFile = file;
+                        if (mAndRes.mResFileMapping.containsKey(extOrFile)) {
+                            extOrFile = mAndRes.mResFileMapping.get(extOrFile);
+                        }
                     }
-                    if (!uncompressedFilesOrExts.contains(ext)) {
-                        uncompressedFilesOrExts.add(ext);
+                    if (!uncompressedFilesOrExts.contains(extOrFile)) {
+                        uncompressedFilesOrExts.add(extOrFile);
                     }
                 }
             }
@@ -236,6 +243,9 @@ public class Androlib {
             Directory in = apkFile.getDirectory();
             if (in.containsFile("AndroidManifest.xml")) {
                 in.copyToDir(originalDir, "AndroidManifest.xml");
+            }
+            if (in.containsFile("stamp-cert-sha256")) {
+                in.copyToDir(originalDir, "stamp-cert-sha256");
             }
             if (in.containsDir("META-INF")) {
                 in.copyToDir(originalDir, "META-INF");
@@ -330,7 +340,7 @@ public class Androlib {
                 throw new AndrolibException(ex.getMessage());
             }
         }
-        LOGGER.info("Built apk...");
+        LOGGER.info("Built apk into: " + outFile.getPath());
     }
 
     private void buildManifestFile(File appDir, File manifest, File manifestOriginal)
@@ -483,6 +493,23 @@ public class Androlib {
                     }
                 }
 
+                if (buildOptions.netSecConf) {
+                    MetaInfo meta = readMetaFile(new ExtFile(appDir));
+                    if (meta.sdkInfo != null && meta.sdkInfo.get("targetSdkVersion") != null) {
+                        if (Integer.parseInt(meta.sdkInfo.get("targetSdkVersion")) < ResConfigFlags.SDK_NOUGAT) {
+                            LOGGER.warning("Target SDK version is lower than 24! Network Security Configuration might be ignored!");
+                        }
+                    }
+                    File netSecConfOrig = new File(appDir, "res/xml/network_security_config.xml");
+                    if (netSecConfOrig.exists()) {
+                        LOGGER.info("Replacing existing network_security_config.xml!");
+                        netSecConfOrig.delete();
+                    }
+                    ResXmlPatcher.modNetworkSecurityConfig(netSecConfOrig);
+                    ResXmlPatcher.setNetworkSecurityConfig(new File(appDir, "AndroidManifest.xml"));
+                    LOGGER.info("Added permissive network security config in manifest");
+                }
+
                 File apkFile = File.createTempFile("APKTOOL", null);
                 apkFile.delete();
                 resourceFile.delete();
@@ -495,7 +522,8 @@ public class Androlib {
                                 "AndroidManifest.xml"), new File(appDir, "res"),
                         ninePatch, null, parseUsesFramework(usesFramework));
 
-                Directory tmpDir = new ExtFile(apkFile).getDirectory();
+                ExtFile tmpExtFile = new ExtFile(apkFile);
+                Directory tmpDir = tmpExtFile.getDirectory();
 
                 // Sometimes an application is built with a resources.arsc file with no resources,
                 // Apktool assumes it will have a rebuilt arsc file, when it doesn't. So if we
@@ -506,13 +534,15 @@ public class Androlib {
                                     : APK_RESOURCES_WITHOUT_RES_FILENAMES);
                 } catch (DirectoryException ex) {
                     LOGGER.warning(ex.getMessage());
+                } finally {
+                    tmpExtFile.close();
                 }
 
                 // delete tmpDir
                 apkFile.delete();
             }
             return true;
-        } catch (IOException | BrutException ex) {
+        } catch (IOException | BrutException | ParserConfigurationException | TransformerException | SAXException ex) {
             throw new AndrolibException(ex);
         }
     }
@@ -559,6 +589,8 @@ public class Androlib {
 
                 Directory tmpDir = new ExtFile(apkFile).getDirectory();
                 tmpDir.copyToDir(apkDir, APK_MANIFEST_FILENAMES);
+
+                apkFile.delete();
             }
             return true;
         } catch (IOException | DirectoryException ex) {
@@ -606,6 +638,10 @@ public class Androlib {
                     if (in.containsFile("AndroidManifest.xml")) {
                         LOGGER.info("Copy AndroidManifest.xml...");
                         in.copyToDir(new File(appDir, APK_DIRNAME), "AndroidManifest.xml");
+                    }
+                    if (in.containsFile("stamp-cert-sha256")) {
+                        LOGGER.info("Copy stamp-cert-sha256...");
+                        in.copyToDir(new File(appDir, APK_DIRNAME), "stamp-cert-sha256");
                     }
                     if (in.containsDir("META-INF")) {
                         LOGGER.info("Copy META-INF...");
@@ -693,6 +729,7 @@ public class Androlib {
                 BufferedInputStream unknownFile = new BufferedInputStream(new FileInputStream(inputFile));
                 CRC32 crc = BrutIO.calculateCrc(unknownFile);
                 newEntry.setCrc(crc.getValue());
+                unknownFile.close();
             } else {
                 newEntry.setMethod(ZipEntry.DEFLATED);
             }
@@ -805,7 +842,7 @@ public class Androlib {
     private final static String APK_DIRNAME = "build/apk";
     private final static String UNK_DIRNAME = "unknown";
     private final static String[] APK_RESOURCES_FILENAMES = new String[] {
-            "resources.arsc", "AndroidManifest.xml", "res" };
+            "resources.arsc", "AndroidManifest.xml", "res", "r", "R" };
     private final static String[] APK_RESOURCES_WITHOUT_RES_FILENAMES = new String[] {
             "resources.arsc", "AndroidManifest.xml" };
     private final static String[] APP_RESOURCES_FILENAMES = new String[] {

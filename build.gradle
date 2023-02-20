@@ -18,33 +18,33 @@ import java.nio.charset.StandardCharsets
 buildscript {
     ext {
         depends = [
-                baksmali       : 'org.smali:baksmali:2.5.2',
-                commons_cli    : 'commons-cli:commons-cli:1.4',
+                baksmali       : 'com.github.iBotPeaches.smali:baksmali:403e90375e',
+                commons_cli    : 'commons-cli:commons-cli:1.5.0',
                 commons_io     : 'commons-io:commons-io:2.11.0',
                 commons_lang   : 'org.apache.commons:commons-lang3:3.12.0',
-                guava          : 'com.google.guava:guava:30.1.1-jre',
+                commons_text   : 'org.apache.commons:commons-text:1.10.0',
+                guava          : 'com.google.guava:guava:31.0.1-jre',
                 junit          : 'junit:junit:4.13.2',
-                proguard_gradle: 'com.guardsquare:proguard-gradle:7.1.1',
-                snakeyaml      : 'org.yaml:snakeyaml:1.29:android',
-                smali          : 'org.smali:smali:2.5.2',
+                proguard_gradle: 'com.guardsquare:proguard-gradle:7.3.0',
+                snakeyaml      : 'org.yaml:snakeyaml:1.32:android',
+                smali          : 'com.github.iBotPeaches.smali:smali:403e90375e',
                 xmlpull        : 'xpp3:xpp3:1.1.4c',
                 xmlunit        : 'xmlunit:xmlunit:1.6',
         ]
     }
 
     repositories {
-        mavenCentral()
         gradlePluginPortal()
     }
     dependencies {
-        classpath "gradle.plugin.com.github.jengelman.gradle.plugins:shadow:7.0.0"
+        classpath "gradle.plugin.com.github.johnrengelman:shadow:7.1.0"
         classpath "gradle.plugin.com.hierynomus.gradle.plugins:license-gradle-plugin:0.16.1"
     }
 }
 
 apply from: 'gradle/functions.gradle'
 
-version = '2.6.1'
+version = '2.7.1'
 def suffix = 'SNAPSHOT'
 
 defaultTasks 'build', 'shadowJar', 'proguard'
@@ -79,6 +79,19 @@ allprojects {
             "licenseMain",
             "licenseTest"
     ]
+
+    repositories {
+        mavenCentral()
+
+        // Obtain baksmali/smali from source builds - https://github.com/iBotPeaches/smali
+        // Remove when official smali releases come out again.
+        maven {
+            url 'https://jitpack.io'
+            content {
+                includeGroup('com.github.iBotPeaches.smali')
+            }
+        }
+    }
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -135,17 +148,13 @@ task snapshot {
 subprojects {
     apply plugin: 'java'
 
-    repositories {
-        mavenCentral()
-    }
-
     test {
         testLogging {
             exceptionFormat = 'full'
         }
     }
 
-    def mavenProjects = ['apktool-lib', 'brut.j.common', 'brut.j.util', 'brut.j.dir']
+    def mavenProjects = ['apktool-lib', 'apktool-cli', 'brut.j.common', 'brut.j.util', 'brut.j.dir']
 
     if (project.name in mavenProjects) {
         apply plugin: 'maven-publish'
